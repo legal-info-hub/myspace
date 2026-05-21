@@ -10,6 +10,7 @@
             --accent: #0f766e;
             --bg: #f8fafc;
             --text: #334155;
+            --border: #e2e8f0;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -54,22 +55,70 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
+        /* Search Box Layout Styles */
+        .search-container {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--primary);
+        }
+        .search-input {
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+        }
+        .search-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.65rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .search-btn:hover {
+            background-color: #0d5c56;
+        }
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
         }
         th, td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
         }
         th {
             background-color: #f1f5f9;
             color: var(--primary);
             font-weight: 600;
         }
-        .loading {
+        .loading, .no-results {
             text-align: center;
             padding: 2rem;
             font-style: italic;
@@ -96,9 +145,23 @@
 
         <section class="data-section">
             <h2>Confidential Case Records</h2>
-            <p style="color: #ef4444; font-weight: 500;">⚠️ Warning: This information is legally privileged and strictly confidential.</p>
+            <p style="color: #ef4444; font-weight: 500; margin-bottom: 1.5rem;">⚠️ Warning: This information is legally privileged and strictly confidential.</p>
             
+            <!-- Dual Column Search Section (Inputs act as optional fields) -->
+            <div class="search-container">
+                <div class="search-group">
+                    <label for="searchCol1">Search Column 1 (e.g., Record ID)</label>
+                    <input type="text" id="searchCol1" class="search-input" placeholder="Optional background criteria...">
+                </div>
+                <div class="search-group">
+                    <label for="searchCol2">Search Column 2 (e.g., Classification)</label>
+                    <input type="text" id="searchCol2" class="search-input" placeholder="Optional background criteria...">
+                </div>
+                <button class="search-btn" onclick="filterTableData()">Search</button>
+            </div>
+
             <div id="loadingMessage" class="loading">Loading secure data from spreadsheet...</div>
+            <div id="noResultsMessage" class="no-results" style="display: none;">No matching confidential records found.</div>
             
             <table id="dataTable" style="display: none;">
                 <thead>
@@ -113,19 +176,21 @@
     <script>
         // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BETWEEN THE QUOTES BELOW:
         const API_URL = "https://script.google.com/macros/s/AKfycbxePSWMCZUsSJCy-vQks7cgPF08zzHpy5jstqLVFcMccIloMi2XaSMwqsJ_bcmS3tt3Iw/exec";
+        
+        let allMasterData = []; // Stores the complete spreadsheet dataset locally
 
         async function loadData() {
             try {
                 const response = await fetch(API_URL);
-                const data = await response.json();
+                allMasterData = await response.json();
                 
-                if (data.length === 0) {
+                if (allMasterData.length === 0) {
                     document.getElementById('loadingMessage').innerText = "No data found.";
                     return;
                 }
 
-                // Generate Table Headers Automatically
-                const headers = Object.keys(data[0]);
+                // Generate table headers automatically from Google Sheet columns
+                const headers = Object.keys(allMasterData[0]);
                 const headerRow = document.getElementById('tableHeaders');
                 headers.forEach(header => {
                     const th = document.createElement('th');
@@ -133,19 +198,9 @@
                     headerRow.appendChild(th);
                 });
 
-                // Generate Table Rows Dynamically
-                const tableBody = document.getElementById('tableBody');
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    headers.forEach(header => {
-                        const td = document.createElement('td');
-                        td.innerText = row[header] || '';
-                        tr.appendChild(td);
-                    });
-                    tableBody.appendChild(tr);
-                });
+                // Render the complete database immediately on arrival
+                renderTableData(allMasterData);
 
-                // Hide loading message and show table
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('dataTable').style.display = 'table';
 
@@ -156,7 +211,58 @@
             }
         }
 
-        // Run the function when the page opens
+        // Logic framework handles item queries across row elements
+        function renderTableData(dataset) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = ''; // Clear previous items
+            
+            const headers = Object.keys(allMasterData[0]);
+
+            dataset.forEach(row => {
+                const tr = document.createElement('tr');
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.innerText = row[header] || '';
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Filters matching data conditions across explicit sheet elements
+        function filterTableData() {
+            const input1 = document.getElementById('searchCol1').value.trim().toLowerCase();
+            const input2 = document.getElementById('searchCol2').value.trim().toLowerCase();
+            const headers = Object.keys(allMasterData[0]);
+            
+            // Assign index matching positions to the targeted columns
+            // Index 0 represents your 1st Column, Index 2 represents your 3rd Column, etc.
+            const targetCol1Key = headers[0]; 
+            const targetCol2Key = headers[2]; 
+
+            const filteredData = allMasterData.filter(row => {
+                const val1 = String(row[targetCol1Key] || '').toLowerCase();
+                const val2 = String(row[targetCol2Key] || '').toLowerCase();
+                
+                // Keep elements if input matches cell query strings or remains empty
+                const match1 = input1 === '' || val1.includes(input1);
+                const match2 = input2 === '' || val2.includes(input2);
+                
+                return match1 && match2;
+            });
+
+            // Display adjustments if filtering leaves empty rows
+            if (filteredData.length === 0) {
+                document.getElementById('dataTable').style.display = 'none';
+                document.getElementById('noResultsMessage').style.display = 'block';
+            } else {
+                document.getElementById('noResultsMessage').style.display = 'none';
+                document.getElementById('dataTable').style.display = 'table';
+                renderTableData(filteredData);
+            }
+        }
+
+        // Fire initialization sequence on client connection
         loadData();
     </script>
 </body>
