@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Information Portal</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #0f766e;
+            --bg: #f8fafc;
+            --text: #334155;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        /* About Us Section styling */
+        .about-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .about-img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--accent);
+            flex-shrink: 0;
+        }
+        /* Table / Data Section styling */
+        .data-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        @media (max-width: 768px) {
+            .about-section { flex-direction: column; text-align: center; }
+            table, thead, tbody, th, td, tr { display: block; }
+            th { display: none; }
+            td { border-bottom: 1px solid #e2e8f0; padding-left: 50%; position: relative; }
+            td::before { content: attr(data-label); position: absolute; left: 1rem; font-weight: bold; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Secure Case Information Portal</h1>
+        <p>Restricted Regional Access Only</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- Beautiful About Us Section -->
+        <section class="about-section">
+            <img src="profile.png" alt="About Us Picture" class="about-img">
+            <div>
+                <h2>About Us</h2>
+                <p>Welcome to our secure portal. We handle highly sensitive legal documentation and case materials with strict confidentiality protocols. This platform provides regional legal stakeholders with direct access to critical verification records.</p>
+            </div>
+        </section>
+
+        <!-- Confidential Data Section (7 Rows) -->
+        <section class="data-section">
+            <h2>Confidential Case Records</h2>
+            <p style="color: #ef4444; font-weight: 500;">⚠️ Warning: This information is legally privileged and strictly confidential.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Record ID</th>
+                        <th>Date Filed</th>
+                        <th>Classification</th>
+                        <th>Status Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Replace the placeholder text below with your actual 7 rows of data -->
+                    <tr>
+                        <td data-label="Record ID">#001</td>
+                        <td data-label="Date Filed">2026-01-15</td>
+                        <td data-label="Classification">Exhibit A</td>
+                        <td data-label="Status Summary">Initial filing documents verified.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#002</td>
+                        <td data-label="Date Filed">2026-02-02</td>
+                        <td data-label="Classification">Exhibit B</td>
+                        <td data-label="Status Summary">Evidentiary review phase completed.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#003</td>
+                        <td data-label="Date Filed">2026-02-20</td>
+                        <td data-label="Classification">Confidential</td>
+                        <td data-label="Status Summary">Witness statements cross-referenced.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#004</td>
+                        <td data-label="Date Filed">2026-03-05</td>
+                        <td data-label="Classification">Restricted</td>
+                        <td data-label="Status Summary">Financial audit trail logged.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#005</td>
+                        <td data-label="Date Filed">2026-03-25</td>
+                        <td data-label="Classification">Exhibit C</td>
+                        <td data-label="Status Summary">Depositions archived under seal.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#006</td>
+                        <td data-label="Date Filed">2026-04-12</td>
+                        <td data-label="Classification">Privileged</td>
+                        <td data-label="Status Summary">Counsel responses compiled.</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Record ID">#007</td>
+                        <td data-label="Date Filed">2026-05-10</td>
+                        <td data-label="Classification">Final Review</td>
+                        <td data-label="Status Summary">Case status updated for regional review.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </div>
+
+</body>
+</html>
