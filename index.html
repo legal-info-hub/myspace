@@ -30,7 +30,6 @@
             margin: 2rem auto;
             padding: 0 1rem;
         }
-        /* About Us Section styling */
         .about-section {
             background: white;
             padding: 2.5rem;
@@ -49,7 +48,6 @@
             border: 4px solid var(--accent);
             flex-shrink: 0;
         }
-        /* Table / Data Section styling */
         .data-section {
             background: white;
             padding: 2.5rem;
@@ -71,15 +69,11 @@
             color: var(--primary);
             font-weight: 600;
         }
-        tr:hover {
-            background-color: #f8fafc;
-        }
-        @media (max-width: 768px) {
-            .about-section { flex-direction: column; text-align: center; }
-            table, thead, tbody, th, td, tr { display: block; }
-            th { display: none; }
-            td { border-bottom: 1px solid #e2e8f0; padding-left: 50%; position: relative; }
-            td::before { content: attr(data-label); position: absolute; left: 1rem; font-weight: bold; }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+            color: #64748b;
         }
     </style>
 </head>
@@ -92,78 +86,78 @@
 
     <div class="container">
         
-        <!-- Beautiful About Us Section -->
         <section class="about-section">
-            <img src="profile.png" alt="About Us Picture" class="about-img">
+            <img src="profile.jpg" alt="About Us Picture" class="about-img">
             <div>
                 <h2>About Us</h2>
                 <p>Welcome to our secure portal. We handle highly sensitive legal documentation and case materials with strict confidentiality protocols. This platform provides regional legal stakeholders with direct access to critical verification records.</p>
             </div>
         </section>
 
-        <!-- Confidential Data Section (7 Rows) -->
         <section class="data-section">
-            <h2>Daily Cause List</h2>
+            <h2>Confidential Case Records</h2>
             <p style="color: #ef4444; font-weight: 500;">⚠️ Warning: This information is legally privileged and strictly confidential.</p>
             
-            <table>
+            <div id="loadingMessage" class="loading">Loading secure data from spreadsheet...</div>
+            
+            <table id="dataTable" style="display: none;">
                 <thead>
-                    <tr>
-                        <th>Record ID</th>
-                        <th>Date Filed</th>
-                        <th>Classification</th>
-                        <th>Status Summary</th>
-                    </tr>
+                    <tr id="tableHeaders"></tr>
                 </thead>
-                <tbody>
-                    <!-- Replace the placeholder text below with your actual 7 rows of data -->
-                    <tr>
-                        <td data-label="Record ID">#001</td>
-                        <td data-label="Date Filed">2026-01-15</td>
-                        <td data-label="Classification">Exhibit A</td>
-                        <td data-label="Status Summary">Initial filing documents verified.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#002</td>
-                        <td data-label="Date Filed">2026-02-02</td>
-                        <td data-label="Classification">Exhibit B</td>
-                        <td data-label="Status Summary">Evidentiary review phase completed.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#003</td>
-                        <td data-label="Date Filed">2026-02-20</td>
-                        <td data-label="Classification">Confidential</td>
-                        <td data-label="Status Summary">Witness statements cross-referenced.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#004</td>
-                        <td data-label="Date Filed">2026-03-05</td>
-                        <td data-label="Classification">Restricted</td>
-                        <td data-label="Status Summary">Financial audit trail logged.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#005</td>
-                        <td data-label="Date Filed">2026-03-25</td>
-                        <td data-label="Classification">Exhibit C</td>
-                        <td data-label="Status Summary">Depositions archived under seal.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#006</td>
-                        <td data-label="Date Filed">2026-04-12</td>
-                        <td data-label="Classification">Privileged</td>
-                        <td data-label="Status Summary">Counsel responses compiled.</td>
-                    </tr>
-                    <tr>
-                        <td data-label="Record ID">#007</td>
-                        <td data-label="Date Filed">2026-05-10</td>
-                        <td data-label="Classification">Final Review</td>
-                        <td data-label="Status Summary">Case status updated for regional review.</td>
-                    </tr>
-                </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
         </section>
 
     </div>
 
+    <script>
+        // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BETWEEN THE QUOTES BELOW:
+        const API_URL = "https://script.google.com/macros/s/AKfycbxePSWMCZUsSJCy-vQks7cgPF08zzHpy5jstqLVFcMccIloMi2XaSMwqsJ_bcmS3tt3Iw/exec";
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    document.getElementById('loadingMessage').innerText = "No data found.";
+                    return;
+                }
+
+                // Generate Table Headers Automatically
+                const headers = Object.keys(data[0]);
+                const headerRow = document.getElementById('tableHeaders');
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.innerText = header;
+                    headerRow.appendChild(th);
+                });
+
+                // Generate Table Rows Dynamically
+                const tableBody = document.getElementById('tableBody');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        td.innerText = row[header] || '';
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+
+                // Hide loading message and show table
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('dataTable').style.display = 'table';
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('loadingMessage').innerText = "Failed to securely load data. Please verify network region clearance.";
+                document.getElementById('loadingMessage').style.color = "#ef4444";
+            }
+        }
+
+        // Run the function when the page opens
+        loadData();
+    </script>
 </body>
 </html>
