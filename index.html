@@ -230,28 +230,29 @@
         }
 
         // Filters matching data conditions across explicit sheet elements
+                // Filters data only when there is an exact match on columns 3 and 4
         function filterTableData() {
+            // Get values and convert to lowercase to prevent capitalization mistakes
             const input1 = document.getElementById('searchCol1').value.trim().toLowerCase();
             const input2 = document.getElementById('searchCol2').value.trim().toLowerCase();
-            const headers = Object.keys(allMasterData[0]);
+            const headers = Object.keys(allMasterData);
             
-            // Assign index matching positions to the targeted columns
-            // Index 0 represents your 1st Column, Index 2 represents your 3rd Column, etc.
-            const targetCol1Key = headers[0]; 
-            const targetCol2Key = headers[2]; 
+            // Targets the 3rd column (index 2) and 4th column (index 3) from your Google Sheet
+            const targetCol1Key = headers[2]; 
+            const targetCol2Key = headers[3]; 
 
             const filteredData = allMasterData.filter(row => {
-                const val1 = String(row[targetCol1Key] || '').toLowerCase();
-                const val2 = String(row[targetCol2Key] || '').toLowerCase();
+                const val1 = String(row[targetCol1Key] || '').trim().toLowerCase();
+                const val2 = String(row[targetCol2Key] || '').trim().toLowerCase();
                 
-                // Keep elements if input matches cell query strings or remains empty
-                const match1 = input1 === '' || val1.includes(input1);
-                const match2 = input2 === '' || val2.includes(input2);
+                // Checks for an EXACT match. If an input field is empty, it skips it.
+                const match1 = input1 === '' || val1 === input1;
+                const match2 = input2 === '' || val2 === input2;
                 
                 return match1 && match2;
             });
 
-            // Display adjustments if filtering leaves empty rows
+            // Show or hide table based on exact matches found
             if (filteredData.length === 0) {
                 document.getElementById('dataTable').style.display = 'none';
                 document.getElementById('noResultsMessage').style.display = 'block';
@@ -261,6 +262,7 @@
                 renderTableData(filteredData);
             }
         }
+
 
         // Fire initialization sequence on client connection
         loadData();
