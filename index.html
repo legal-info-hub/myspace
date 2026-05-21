@@ -173,9 +173,9 @@
 
     </div>
 
-    <script>
+        <script>
         // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BETWEEN THE QUOTES BELOW:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxePSWMCZUsSJCy-vQks7cgPF08zzHpy5jstqLVFcMccIloMi2XaSMwqsJ_bcmS3tt3Iw/exec";
+        const API_URL = "YOUR_COPIED_WEB_APP_URL_HERE";
         
         let allMasterData = []; // Stores the complete spreadsheet dataset locally
 
@@ -189,7 +189,7 @@
                     return;
                 }
 
-                // Generate table headers automatically from Google Sheet columns
+                // 1. DYNAMICALLY GENERATE TABLE HEADERS
                 const headers = Object.keys(allMasterData[0]);
                 const headerRow = document.getElementById('tableHeaders');
                 headers.forEach(header => {
@@ -197,6 +197,15 @@
                     th.innerText = header;
                     headerRow.appendChild(th);
                 });
+
+                // 2. DYNAMICALLY UPDATE SEARCH LABELS ON THE SCREEN
+                // Automatically pulls the actual titles of your 3rd (index 2) and 4th (index 3) columns
+                if (headers.length >= 3) {
+                    document.querySelector('label[for="searchCol1"]').innerText = "Search by " + headers[2];
+                }
+                if (headers.length >= 4) {
+                    document.querySelector('label[for="searchCol2"]').innerText = "Search by " + headers[3];
+                }
 
                 // Render the complete database immediately on arrival
                 renderTableData(allMasterData);
@@ -222,39 +231,36 @@
                 const tr = document.createElement('tr');
                 headers.forEach(header => {
                     const td = document.createElement('td');
-                    td.innerText = row[header] || '';
+                    td.innerText = row[header] !== undefined ? row[header] : '';
                     tr.appendChild(td);
                 });
                 tableBody.appendChild(tr);
             });
         }
 
-       // Filters data only when there is an exact match on columns 3 and 4
-               // Filters data by matching the exact column names securely
+        // 3. FULLY DYNAMIC FILTER LOGIC (No hardcoded names required)
         function filterTableData() {
-            // 1. Get the values typed into the search boxes
             const input1 = document.getElementById('searchCol1').value.trim().toLowerCase();
             const input2 = document.getElementById('searchCol2').value.trim().toLowerCase();
+            
+            // Grabs the column keys automatically based on order
+            const headers = Object.keys(allMasterData[0]);
+            const targetCol1Key = headers[2]; // Exactly the 3rd column
+            const targetCol2Key = headers[3]; // Exactly the 4th column
 
-            // 2. CHANGE THESE TWO NAMES TO MATCH YOUR GOOGLE SHEET COLUMNS EXACTLY
-            // Keep the exact spelling, spaces, and capitalization used in your sheet header row!
-            const column3HeaderName = "CRM Number"; 
-            const column4HeaderName = "Parties Name"; 
-
-            // 3. Filter through the master dataset safely
             const filteredData = allMasterData.filter(row => {
-                // Fetch the cell content using the exact header titles, converting to strings safely
-                const val1 = row[column3HeaderName] !== undefined ? String(row[column3HeaderName]).trim().toLowerCase() : '';
-                const val2 = row[column4HeaderName] !== undefined ? String(row[column4HeaderName]).trim().toLowerCase() : '';
+                // Safeguard against missing data cells, convert everything securely to lowercase strings
+                const val1 = row[targetCol1Key] !== undefined ? String(row[targetCol1Key]).trim().toLowerCase() : '';
+                const val2 = row[targetCol2Key] !== undefined ? String(row[targetCol2Key]).trim().toLowerCase() : '';
                 
-                // Check for exact matching. Empty search input boxes are skipped automatically.
+                // Performs an absolute exact match evaluation
                 const match1 = input1 === '' || val1 === input1;
                 const match2 = input2 === '' || val2 === input2;
                 
                 return match1 && match2;
             });
 
-            // 4. Update the visual website display based on search results
+            // Display adjustments if filtering leaves empty rows
             if (filteredData.length === 0) {
                 document.getElementById('dataTable').style.display = 'none';
                 document.getElementById('noResultsMessage').style.display = 'block';
