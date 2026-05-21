@@ -55,7 +55,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
-        /* Search Box Layout Styles */
         .search-container {
             background: #f1f5f9;
             padding: 1.5rem;
@@ -88,21 +87,6 @@
         .search-input:focus {
             border-color: var(--accent);
         }
-        .search-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.65rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: background 0.2s;
-        }
-        .search-btn:hover {
-            background-color: #0d5c56;
-        }
-        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -147,17 +131,15 @@
             <h2>Confidential Case Records</h2>
             <p style="color: #ef4444; font-weight: 500; margin-bottom: 1.5rem;">⚠️ Warning: This information is legally privileged and strictly confidential.</p>
             
-            <!-- Dual Column Search Section (Inputs act as optional fields) -->
             <div class="search-container">
                 <div class="search-group">
-                    <label for="searchCol1">CRM Number</label>
-                    <input type="text" id="searchCol1" class="search-input" placeholder="">
+                    <label id="lblCol1" for="searchCol1">Search Column 3</label>
+                    <input type="text" id="searchCol1" class="search-input" oninput="filterTableData()" placeholder="Type exact entry...">
                 </div>
                 <div class="search-group">
-                    <label for="searchCol2">Parties Name</label>
-                    <input type="text" id="searchCol2" class="search-input" placeholder="">
+                    <label id="lblCol2" for="searchCol2">Search Column 4</label>
+                    <input type="text" id="searchCol2" class="search-input" oninput="filterTableData()" placeholder="Type exact entry...">
                 </div>
-                <button class="search-btn" onclick="filterTableData()">Search</button>
             </div>
 
             <div id="loadingMessage" class="loading">Loading secure data from spreadsheet...</div>
@@ -173,94 +155,85 @@
 
     </div>
 
-        <script>
-        // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BETWEEN THE QUOTES BELOW:
-        const API_URL = "YOUR_COPIED_WEB_APP_URL_HERE";
+    <script>
+        // PASTE YOUR NEW GOOGLE WEB APP VERSION URL BELOW:
+        const API_URL = "https://script.google.com/macros/s/AKfycbxePSWMCZUsSJCy-vQks7cgPF08zzHpy5jstqLVFcMccIloMi2XaSMwqsJ_bcmS3tt3Iw/exec";
         
-        let allMasterData = []; // Stores the complete spreadsheet dataset locally
+        let allMasterData = []; 
+        let sheetHeaders = [];
 
         async function loadData() {
             try {
+                // Fixed security parameter by running a clean browser fetch sequence
                 const response = await fetch(API_URL);
                 allMasterData = await response.json();
                 
-                if (allMasterData.length === 0) {
-                    document.getElementById('loadingMessage').innerText = "No data found.";
+                if (!allMasterData || allMasterData.length === 0) {
+                    document.getElementById('loadingMessage').innerText = "No records found in spreadsheet.";
                     return;
                 }
 
-                // 1. DYNAMICALLY GENERATE TABLE HEADERS
-                const headers = Object.keys(allMasterData[0]);
+                sheetHeaders = Object.keys(allMasterData[0]);
                 const headerRow = document.getElementById('tableHeaders');
-                headers.forEach(header => {
+                
+                sheetHeaders.forEach(header => {
                     const th = document.createElement('th');
                     th.innerText = header;
                     headerRow.appendChild(th);
                 });
 
-                // 2. DYNAMICALLY UPDATE SEARCH LABELS ON THE SCREEN
-                // Automatically pulls the actual titles of your 3rd (index 2) and 4th (index 3) columns
-                if (headers.length >= 3) {
-                    document.querySelector('label[for="searchCol1"]').innerText = "Search by " + headers[2];
+                // Update Search Labels dynamically with error catching safeguards
+                if (sheetHeaders.length >= 3) {
+                    document.getElementById('lblCol1').innerText = "Search by " + sheetHeaders[2];
                 }
-                if (headers.length >= 4) {
-                    document.querySelector('label[for="searchCol2"]').innerText = "Search by " + headers[3];
+                if (sheetHeaders.length >= 4) {
+                    document.getElementById('lblCol2').innerText = "Search by " + sheetHeaders[3];
                 }
 
-                // Render the complete database immediately on arrival
                 renderTableData(allMasterData);
-
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('dataTable').style.display = 'table';
 
             } catch (error) {
-                console.error("Error fetching data:", error);
-                document.getElementById('loadingMessage').innerText = "Failed to securely load data. Please verify network region clearance.";
+                console.error("Connection Error:", error);
+                document.getElementById('loadingMessage').innerText = "Failed to securely load data. Check Google deployment credentials.";
                 document.getElementById('loadingMessage').style.color = "#ef4444";
             }
         }
 
-        // Logic framework handles item queries across row elements
         function renderTableData(dataset) {
             const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = ''; // Clear previous items
+            tableBody.innerHTML = ''; 
             
-            const headers = Object.keys(allMasterData[0]);
-
             dataset.forEach(row => {
                 const tr = document.createElement('tr');
-                headers.forEach(header => {
+                sheetHeaders.forEach(header => {
                     const td = document.createElement('td');
-                    td.innerText = row[header] !== undefined ? row[header] : '';
+                    td.innerText = row[header] !== undefined && row[header] !== null ? row[header] : '';
                     tr.appendChild(td);
                 });
                 tableBody.appendChild(tr);
             });
         }
 
-        // 3. FULLY DYNAMIC FILTER LOGIC (No hardcoded names required)
         function filterTableData() {
             const input1 = document.getElementById('searchCol1').value.trim().toLowerCase();
             const input2 = document.getElementById('searchCol2').value.trim().toLowerCase();
             
-            // Grabs the column keys automatically based on order
-            const headers = Object.keys(allMasterData[0]);
-            const targetCol1Key = headers[2]; // Exactly the 3rd column
-            const targetCol2Key = headers[3]; // Exactly the 4th column
+            // Safe array lookups for columns 3 (index 2) and 4 (index 3)
+            const key1 = sheetHeaders.length >= 3 ? sheetHeaders[2] : null;
+            const key2 = sheetHeaders.length >= 4 ? sheetHeaders[3] : null;
 
             const filteredData = allMasterData.filter(row => {
-                // Safeguard against missing data cells, convert everything securely to lowercase strings
-                const val1 = row[targetCol1Key] !== undefined ? String(row[targetCol1Key]).trim().toLowerCase() : '';
-                const val2 = row[targetCol2Key] !== undefined ? String(row[targetCol2Key]).trim().toLowerCase() : '';
+                const val1 = key1 && row[key1] !== undefined ? String(row[key1]).trim().toLowerCase() : '';
+                const val2 = key2 && row[key2] !== undefined ? String(row[key2]).trim().toLowerCase() : '';
                 
-                // Performs an absolute exact match evaluation
                 const match1 = input1 === '' || val1 === input1;
                 const match2 = input2 === '' || val2 === input2;
                 
                 return match1 && match2;
             });
 
-            // Display adjustments if filtering leaves empty rows
             if (filteredData.length === 0) {
                 document.getElementById('dataTable').style.display = 'none';
                 document.getElementById('noResultsMessage').style.display = 'block';
@@ -271,7 +244,6 @@
             }
         }
 
-        // Fire initialization sequence on client connection
         loadData();
     </script>
 </body>
